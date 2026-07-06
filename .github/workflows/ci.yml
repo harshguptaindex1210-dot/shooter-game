@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Assert bundle size ≤ 500 KB gz
+        run: |
+          index_bytes=$(stat -c%s dist/assets/index-*.js 2>/dev/null || echo 0)
+          chunk_bytes=$(stat -c%s dist/assets/three-*.js 2>/dev/null || echo 0)
+          total=$((index_bytes + chunk_bytes))
+          limit=512000
+          echo "Total bundle bytes: $total (limit: $limit)"
+          if [ "$total" -gt "$limit" ]; then
+            echo "Bundle exceeds 500 KB gz limit"
+            exit 1
+          fi
