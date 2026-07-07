@@ -50,11 +50,17 @@ export class ZoneSystem {
 
     const positions = this.ring.geometry.attributes.position;
     const outerR = Math.max(phase.radius, 10);
-    for (let i = 0; i < positions.count; i++) {
-      const angle = (i / positions.count) * Math.PI * 2;
-      const isOuter = i % 2 === 0;
-      const r = isOuter ? outerR : innerRadius;
-      positions.setXYZ(i, Math.cos(angle) * r, 0, Math.sin(angle) * r);
+    const thetaSegments = 64;
+    for (let i = 0; i <= thetaSegments; i++) {
+      const angle = (i / thetaSegments) * Math.PI * 2;
+      const innerIdx = i * 2;
+      const outerIdx = i * 2 + 1;
+      if (innerIdx < positions.count) {
+        positions.setXYZ(innerIdx, Math.cos(angle) * innerRadius, 0, Math.sin(angle) * innerRadius);
+      }
+      if (outerIdx < positions.count) {
+        positions.setXYZ(outerIdx, Math.cos(angle) * outerR, 0, Math.sin(angle) * outerR);
+      }
     }
     positions.needsUpdate = true;
 

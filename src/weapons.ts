@@ -135,7 +135,9 @@ export function fireWeapon(
   const spreadAngle = (Math.random() - 0.5) * weapon.def.spread * 2;
   const spreadDir = direction.clone();
   const up = new THREE.Vector3(0, 1, 0);
-  const right = new THREE.Vector3().crossVectors(spreadDir, up).normalize();
+  const right = new THREE.Vector3().crossVectors(spreadDir, up);
+  if (right.length() < 0.001) right.set(1, 0, 0);
+  right.normalize();
   const spreadUp = new THREE.Vector3().crossVectors(right, spreadDir).normalize();
   spreadDir.applyAxisAngle(spreadUp, spreadAngle);
   spreadDir.applyAxisAngle(right, (Math.random() - 0.5) * weapon.def.spread * 2);
