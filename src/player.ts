@@ -1,0 +1,162 @@
+import * as THREE from 'three';
+
+export type PlayerState = 'stand' | 'crouch' | 'sprint' | 'jump';
+export type CameraMode = 'tps' | 'fps';
+
+export interface PlayerInput {
+  forward: boolean;
+  backward: boolean;
+  left: boolean;
+  right: boolean;
+  sprint: boolean;
+  crouch: boolean;
+  jump: boolean;
+  aim: boolean;
+  mouseX: number;
+  mouseY: number;
+}
+
+export interface PlayerBundle {
+  mesh: THREE.Mesh;
+  capsule: THREE.Mesh;
+  position: THREE.Vector3;
+  velocity: THREE.Vector3;
+  state: PlayerState;
+  cameraMode: CameraMode;
+  health: number;
+  yaw: number;
+  pitch: number;
+  update: (input: PlayerInput, dt: number, groundY: number) => void;
+  getEyeHeight: () => number;
+}
+
+const STAND_HEIGHT = 1.8;
+const CROUCH_HEIGHT = 1.0;
+const SPRINT_MULT = 1.5;
+const WALK_SPEED = 6;
+const CROUCH_SPEED = 2.5;
+const JUMP_VELOCITY = 5;
+const GRAVITY = -20;
+const MOUSE_SENSITIVITY = 0.002;
+const MAX_PITCH = Math.PI / 2 - 0.01;
+
+export function createPlayer(startPos: THREE.Vector3 = new THREE.Vector3(0, 0.9, 0)): PlayerBundle {
+  const bundle = {} as PlayerBundle;
+  let pState: PlayerState = 'stand';
+  let pCameraMode: CameraMode = 'tps';
+  let pYaw = 0;
+  let pPitch = 0;
+  let onGround = startPos.y <= 0.9;
+  let crouchToggle = false;
+
+  bundle.velocity = new THREE.Vector3(0, 0, 0);
+  bundle.position = startPos.clone();
+  bundle.health = 100;
+
+  Object.defineProperties(bundle, {
+    state: { get: () => pState },
+    cameraMode: { get: () => pCameraMode },
+    yaw: { get: () => pYaw },
+    pitch: { get: () => pPitch },
+  });
+
+  const geo = new THREE.CapsuleGeometry(0.4, 1.0, 4, 8);
+  const mat = new THREE.MeshStandardMaterial({ color: 0x3366cc });
+  bundle.capsule = new THREE.Mesh(geo, mat);
+  bundle.capsule.position.copy(bundle.position);
+
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x4477dd });
+  const bodyGeo = new THREE.BoxGeometry(0.8, 1.2, 0.5);
+  bundle.mesh = new THREE.Mesh(bodyGeo, bodyMat);
+  bundle.mesh.position.copy(bundle.position);
+
+  const headMat = new THREE.MeshStandardMaterial({ color: 0xddaa88 });
+  const headGeo = new THREE.SphereGeometry(0.25, 8, 8);
+  const head = new THREE.Mesh(headGeo, headMat);
+  head.position.set(0, 0.85, 0);
+  bundle.mesh.add(head);
+
+  function getHeight(): number {
+    return pState === 'crouch' ? CROUCH_HEIGHT : STAND_HEIGHT;
+  }
+
+  function getSpeed(): number {
+    if (pState === 'crouch') return CROUCH_SPEED;
+    if (pState === 'sprint') return WALK_SPEED * SPRINT_MULT;
+    return WALK_SPEED;
+  }
+
+  bundle.update = (input: PlayerInput, dt: number, groundY: number) => {
+    const height = getHeight();
+    const speed = getSpeed();
+
+    if (input.crouch && onGround) {
+      if (!crouchToggle) {
+        crouchToggle = true;
+        pState = pState === 'stand' ? 'crouch' : 'stand';
+      }
+    } else if (!input.crouch) {
+      crouchToggle = false;
+    }
+
+    if (input.sprint && pState !== 'crouch' && onGround) {
+      pState = 'sprint';
+    } else if (!input.sprint && pState === 'sprint' && onGround) {
+      pState = 'stand';
+    }
+
+    if (input.jump && onGround) {
+      bundle.velocity.y = JUMP_VELOCITY;
+      pState = 'jump';
+      onGround = false;
+    }
+
+    if (pState === 'jump' && onGround) {
+      pState = 'stand';
+    }
+
+    pYaw -= input.mouseX * MOUSE_SENSITIVITY;
+    pPitch -= input.mouseY * MOUSE_SENSITIVITY;
+    pPitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, pPitch));
+
+    const forwardVec = new THREE.Vector3(-Math.sin(pYaw), 0, -Math.cos(pYaw));
+    const rightVec = new THREE.Vector3(forwardVec.z, 0, -forwardVec.x);
+
+    const moveDir = new THREE.Vector3(0, 0, 0);
+    if (input.forward) moveDir.add(forwardVec);
+    if (input.backward) moveDir.sub(forwardVec);
+    if (input.left) moveDir.sub(rightVec);
+    if (input.right) moveDir.add(rightVec);
+
+    if (moveDir.lengthSq() > 0) {
+      moveDir.normalize();
+    }
+
+    bundle.velocity.x = moveDir.x * speed;
+    bundle.velocity.z = moveDir.z * speed;
+    bundle.velocity.y += GRAVITY * dt;
+
+    bundle.position.x += bundle.velocity.x * dt;
+    bundle.position.y += bundle.velocity.y * dt;
+    bundle.position.z += bundle.velocity.z * dt;
+
+    if (bundle.position.y < groundY + height / 2) {
+      bundle.position.y = groundY + height / 2;
+      bundle.velocity.y = 0;
+      onGround = true;
+    }
+
+    bundle.capsule.position.copy(bundle.position);
+    bundle.capsule.scale.y = height / 1.8;
+    bundle.mesh.position.copy(bundle.position);
+    bundle.mesh.position.y += height / 2 - 0.3;
+
+    pCameraMode = input.aim ? 'fps' : 'tps';
+  };
+
+  bundle.getEyeHeight = () => {
+    return bundle.position.y + (pState === 'crouch' ? CROUCH_HEIGHT - 0.2 : STAND_HEIGHT - 0.2);
+  };
+
+  return bundle;
+}
