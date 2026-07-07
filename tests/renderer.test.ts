@@ -1,16 +1,20 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
+function createMockRenderer() {
+  return {
+    domElement: document.createElement('canvas'),
+    setSize: vi.fn(),
+    setPixelRatio: vi.fn(),
+    shadowMap: { enabled: true, type: 0 },
+    getPixelRatio: () => 1,
+  };
+}
+
 vi.mock('three', async (importOriginal) => {
   const actual = await importOriginal<typeof import('three')>();
   return {
     ...actual,
-    WebGLRenderer: vi.fn().mockImplementation(() => ({
-      domElement: document.createElement('canvas'),
-      setSize: vi.fn(),
-      setPixelRatio: vi.fn(),
-      shadowMap: { enabled: false, type: 0 },
-      getPixelRatio: () => 2,
-    })),
+    WebGLRenderer: vi.fn().mockImplementation(createMockRenderer),
   };
 });
 
@@ -21,6 +25,7 @@ describe('createRenderer', () => {
     canvas = document.createElement('canvas');
     canvas.width = 1024;
     canvas.height = 576;
+    vi.stubGlobal('window', { ...window, devicePixelRatio: 2 });
   });
 
   it('creates renderer sized to canvas with medium preset', async () => {
@@ -30,11 +35,11 @@ describe('createRenderer', () => {
     const { WebGLRenderer } = await import('three');
     expect(WebGLRenderer).toHaveBeenCalledWith({ canvas, antialias: true });
     expect(renderer.setSize).toHaveBeenCalledWith(1024, 576);
-    expect(renderer.setPixelRatio).toHaveBeenCalledWith(Math.min(window.devicePixelRatio, 2));
+    expect(renderer.setPixelRatio).toHaveBeenCalledWith(2);
     expect(renderer.domElement).toBeDefined();
   });
 
-  it('creates renderer with low preset (pixelRatio=1, no shadows)', async () => {
+  it('creates renderer with low preset (pixelRatio=1, shadows disabled)', async () => {
     const { createRenderer } = await import('../src/renderer');
     const renderer = createRenderer(canvas, 'low');
 

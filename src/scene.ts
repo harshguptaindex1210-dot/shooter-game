@@ -45,7 +45,7 @@ export function createScene(
     dirLight.shadow.camera.right = 500;
     dirLight.shadow.camera.top = 500;
     dirLight.shadow.camera.bottom = -500;
-    dirLight.shadow.camera.far = 500;
+    dirLight.shadow.camera.far = 700;
   }
   scene.add(dirLight);
 

@@ -9,9 +9,9 @@ export function createRenderer(
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(canvas.width, canvas.height);
   renderer.setPixelRatio(pixelRatio);
+  renderer.shadowMap.enabled = quality === 'medium';
 
   if (quality === 'medium') {
-    renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   }
 

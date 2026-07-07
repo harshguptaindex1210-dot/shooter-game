@@ -38,3 +38,4 @@ coverage/
 # Temporary
 *.tmp
 *.bak
+temp_*

@@ -12,11 +12,7 @@ async function bench() {
   const page = await browser.newPage();
   await page.setViewport({ width: 1024, height: 576 });
 
-  await page.goto('http://localhost:4173', { waitUntil: 'networkidle0' });
-
-  await page.evaluate((quality) => {
-    document.documentElement.dataset.quality = quality;
-  }, QUALITY);
+  await page.goto(`http://localhost:4173?quality=${QUALITY}`, { waitUntil: 'networkidle0' });
 
   const fps = await page.evaluate(async (frameCount) => {
     const frames = [];
