@@ -32,7 +32,7 @@ export function createDamageable(id: string, pos: THREE.Vector3, maxHp: number =
     capsuleHeight: 1.8,
     capsuleRadius: 0.4,
     takeDamage(amount: number) {
-      if (!alive) return;
+      if (!alive || amount <= 0) return;
       health = Math.max(0, health - amount);
       if (health <= 0) alive = false;
     },
