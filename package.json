@@ -13,7 +13,9 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,json,css,md}\" \"tests/**/*.ts\"",
     "typecheck": "tsc --noEmit",
-    "bench:render": "node scripts/bench-render.js"
+    "bench:render": "npm run bench:render:low && npm run bench:render:med",
+"bench:render:low": "node scripts/bench-render.js low",
+"bench:render:med": "node scripts/bench-render.js medium"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",
