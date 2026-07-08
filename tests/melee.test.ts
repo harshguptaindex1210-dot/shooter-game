@@ -29,7 +29,7 @@ describe('melee weapons', () => {
     expect(m.swinging).toBe(true);
   });
 
-  it('rejects swing during cooldown', () => {
+  it('rejects swing while already swinging', () => {
     const m = createMeleeWeapon('knife');
     startMeleeSwing(m, 1000);
     updateMeleeSwing(m, 1001);

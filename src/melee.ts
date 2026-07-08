@@ -111,11 +111,12 @@ export function checkMeleeHit(
   attackerYaw: number,
   targets: MeleeHitTarget[]
 ): { hit: boolean; targetId?: string; damage: number } {
+  const safeTargets = targets ?? [];
   const forward = new THREE.Vector3(-Math.sin(attackerYaw), 0, -Math.cos(attackerYaw));
   const origin = attackerPos.clone();
   origin.y += 0.9;
 
-  for (const t of targets) {
+  for (const t of safeTargets) {
     const toTarget = t.position.clone().sub(origin);
     const dist = toTarget.length();
     if (dist > melee.def.range) continue;

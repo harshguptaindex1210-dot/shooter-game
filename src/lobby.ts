@@ -45,8 +45,8 @@ export function showLobby(
   document.body.appendChild(overlay);
 
   document.getElementById('btn-start')?.addEventListener('click', () => {
-    overlay.remove();
     callbacks.onStartMatch();
+    overlay.remove();
   });
 
   document.getElementById('sel-quality')?.addEventListener('change', (e) => {

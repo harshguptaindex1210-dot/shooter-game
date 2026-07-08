@@ -97,7 +97,12 @@ export function createScene(
       const z = Math.sin(angle) * dist;
 
       // Skip if near a POI
-      const nearPoi = [300, 0, -300].some((p) => Math.abs(x - p) < 40 && Math.abs(z - p) < 40);
+      const poiCoords: [number, number][] = [];
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2;
+        poiCoords.push([Math.cos(a) * 300, Math.sin(a) * 300]);
+      }
+      const nearPoi = poiCoords.some(([px, pz]) => Math.abs(x - px) < 40 && Math.abs(z - pz) < 40);
       if (nearPoi) continue;
 
       const tree = new THREE.Group();

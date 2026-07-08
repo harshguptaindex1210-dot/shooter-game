@@ -81,7 +81,7 @@ function init() {
 
       robot.group.position.copy(player.position);
       robot.group.position.y = -0.8;
-      robot.group.rotation.y = -player.yaw;
+      robot.group.rotation.y = player.yaw;
 
       const animMap: Record<string, string> = {
         stand: 'idle',
