@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readdirSync, statSync } from 'node:fs';
+import { readdirSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { readFileSync } from 'node:fs';
 
