@@ -2,22 +2,27 @@
 
 ## Effort
 
-A browser-based, 3D battle royale game inspired by BGMI, with open-world (GTA-style) and driving (NFS-style) influences. Solo-developed. MVP targets the core BR loop.
+A browser-based, 3D battle royale game set in a robot apocalypse — Titanfall-style humanoid robots fight with guns, melee (bat/knife/pan), and grenades on a PUBG-style semi-realistic 1x1 km map. Solo-developed. MVP ships the core BR loop with visual polish.
 
 ## Locked Decisions
 
 | # | Decision | Choice | Notes |
 |---|----------|--------|-------|
-| D1 | Genre pillar | Battle Royale (BGMI-style) | GTA/NFS influences deferred post-MVP |
-| D2 | Platform | Browser (WebGL 2) | No native client in MVP |
+| D1 | Genre pillar | Battle Royale | Robot apocalypse theme |
+| D2 | Platform | Browser (WebGL 2) | No native client |
 | D3 | Render engine | Three.js | Custom GLSL where needed |
 | D4 | Backend / multiplayer | Nakama (authoritative) | Accounts, matchmaking, storage |
-| D5 | Netcode model | Rollback (GGPO-style) | **RISK**: hard at 50 players; capped at 10 for MVP, scale later |
-| D6 | Visual style | Realistic tactical | Muted palette, military aesthetic |
-| D7 | Map size | ~2x2 km, 50 players target | MVP ships 1x1 km, 10 players |
-| D8 | Vehicles | Full physics-based driving (NFS-style) | Arcade-realistic hybrid |
-| D9 | Performance budget | Scalable 30-60 fps | See invariants below |
-| D10 | Asset pipeline | Programmer art (primitives) first | Replace iteratively |
+| D5 | Netcode model | Rollback (GGPO-style) | Capped at 10 players for now |
+| D6 | Visual style | Semi-realistic (PUBG-style) | Robot apocalypse theme, Titanfall-style robots |
+| D7 | Map size | 1x1 km | 10 players |
+| D8 | Vehicles | None in MVP | Deferred |
+| D9 | Performance budget | Scalable 30-60 fps | See invariants |
+| D10 | Asset pipeline | Free web-sourced assets (CC0/CC-BY) | Sketchfab, Poly Pizza, Mixamo |
+| D11 | Character model | Titanfall-style humanoid robot | Skinned, with Mixamo animations |
+| D12 | Animations | Basic locomotion (idle/walk/run/jump/crouch) | Full combat animation set deferred |
+| D13 | Weapons | Guns + melee (bat/knife/pan) + grenades | Melee arsenal expandable later |
+| D14 | Lobby | Simple 2D UI overlay | Start, stats, settings |
+| D15 | Team | Solo developer | Scope must fit one person |
 | D11 | Anti-cheat | None in MVP | Server-authoritative validation only |
 | D12 | Monetization | Ad-supported (between matches) | No pay-to-win |
 | D13 | Persistence | Full — Nakama accounts + storage | Stats, inventory, progression |
