@@ -19,8 +19,8 @@ export function createScene(
   const renderer = createRenderer(canvas, quality);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x1a1a2e);
-  scene.fog = new THREE.Fog(0x1a1a2e, 200, 600);
+  scene.background = new THREE.Color(0x557799);
+  scene.fog = new THREE.Fog(0x557799, 300, 700);
 
   const camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 2000);
   camera.position.set(0, 50, 100);
@@ -33,11 +33,10 @@ export function createScene(
   controls.maxDistance = 300;
   controls.maxPolarAngle = Math.PI / 2.1;
 
-  // Lighting — PUBG-style warm directional + cool ambient
-  const ambientLight = new THREE.AmbientLight(0x40406a, 0.6);
+  const ambientLight = new THREE.AmbientLight(0x8888cc, 0.8);
   scene.add(ambientLight);
 
-  const dirLight = new THREE.DirectionalLight(0xffcc88, 1.5);
+  const dirLight = new THREE.DirectionalLight(0xffdd99, 1.8);
   dirLight.position.set(150, 200, 100);
   if (quality === 'medium') {
     dirLight.castShadow = true;
