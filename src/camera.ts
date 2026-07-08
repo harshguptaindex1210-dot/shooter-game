@@ -25,14 +25,14 @@ export function updateCamera(
     camera.quaternion.setFromEuler(euler);
   } else {
     const behind = new THREE.Vector3(
-      -Math.sin(playerYaw) * TPS_DISTANCE,
+      Math.sin(playerYaw) * TPS_DISTANCE,
       TPS_HEIGHT,
-      -Math.cos(playerYaw) * TPS_DISTANCE
+      Math.cos(playerYaw) * TPS_DISTANCE
     );
     const shoulder = new THREE.Vector3(
-      Math.cos(playerYaw) * SHOULDER_OFFSET.x,
+      -Math.cos(playerYaw) * SHOULDER_OFFSET.x,
       0,
-      -Math.sin(playerYaw) * SHOULDER_OFFSET.x
+      Math.sin(playerYaw) * SHOULDER_OFFSET.x
     );
 
     const targetPos = playerPos.clone().add(behind).add(shoulder);

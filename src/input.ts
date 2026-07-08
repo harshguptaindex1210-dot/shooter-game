@@ -47,7 +47,7 @@ export function createInputManager(canvas: HTMLCanvasElement): InputManager {
       sprint: keys.has('ShiftLeft') || keys.has('ShiftRight'),
       crouch: keys.has('ControlLeft') || keys.has('ControlRight'),
       jump: keys.has('Space'),
-      aim: keys.has('MouseRight') || keys.has('KeyQ'),
+      aim: keys.has('MouseRight'),
       mouseX,
       mouseY,
     };
