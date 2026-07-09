@@ -12,6 +12,7 @@ export interface PlayerInput {
   crouch: boolean;
   jump: boolean;
   aim: boolean;
+  fire: boolean;
   mouseX: number;
   mouseY: number;
 }

@@ -36,9 +36,9 @@ describe('netcode', () => {
       sprint: false,
       jump: false,
       aim: false,
+      fire: false,
       mouseX: 0,
       mouseY: 0,
-      fire: false,
     };
     e.applyInput(seq1, 1 / 20, 0);
 
@@ -91,9 +91,9 @@ describe('input frame', () => {
       sprint: false,
       jump: false,
       aim: false,
+      fire: false,
       mouseX: 0,
       mouseY: 0,
-      fire: false,
     };
     expect(f.seq).toBe(1);
     expect(f.forward).toBe(true);

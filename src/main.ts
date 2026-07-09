@@ -4,6 +4,8 @@ import { createPlayer } from './player';
 import { createInputManager } from './input';
 import { updateCamera } from './camera';
 import { createRobotModel, transitionAnim, updateRobotAnim } from './robot';
+import { createWeapon, fireWeapon } from './weapons';
+import { createDamageable } from './damageable';
 import { showLobby } from './lobby';
 
 function attachRifle(robotGroup: THREE.Group) {
@@ -30,16 +32,30 @@ function spawnBot(position: THREE.Vector3, scene: THREE.Scene) {
   const bot = createRobotModel();
   bot.group.position.copy(position);
   bot.group.position.y = -0.8;
-  const metalMat = new THREE.MeshStandardMaterial({
-    color: 0x884444,
-    metalness: 0.6,
-    roughness: 0.3,
+
+  // Cloth / scarf
+  const clothMat = new THREE.MeshStandardMaterial({
+    color: 0xcc4444,
+    roughness: 0.9,
+    metalness: 0.0,
   });
-  const label = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, 0.3), metalMat);
-  label.position.set(0, 1.4, 0.25);
-  bot.group.add(label);
+  const cloth = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.15, 0.3), clothMat);
+  cloth.position.set(0, 1.4, -0.15);
+  bot.group.add(cloth);
+
+  // Shoulder mark
+  const markMat = new THREE.MeshStandardMaterial({
+    color: 0xff6600,
+    emissive: 0xff6600,
+    emissiveIntensity: 0.2,
+  });
+  const mark = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.02), markMat);
+  mark.position.set(0.55, 1.4, 0.31);
+  bot.group.add(mark);
+
+  const hp = createDamageable(`bot_${Date.now()}_${Math.random()}`, position.clone(), 100);
   scene.add(bot.group);
-  return bot;
+  return { bot, hp, group: bot.group };
 }
 
 function init() {
@@ -68,12 +84,14 @@ function init() {
   scene.add(player.capsule);
   player.capsule.visible = false;
 
+  const weapon = createWeapon('rifle');
+
   const bots = [
     spawnBot(new THREE.Vector3(5, 0, -5), scene),
     spawnBot(new THREE.Vector3(-5, 0, -8), scene),
     spawnBot(new THREE.Vector3(8, 0, 3), scene),
   ];
-  for (const b of bots) b.anim.actions.idle.play();
+  for (const b of bots) b.bot.anim.actions.idle.play();
 
   const input = createInputManager(canvas);
 
@@ -94,17 +112,15 @@ function init() {
     }
   );
 
-  function resize() {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+  window.addEventListener('resize', () => {
+    const w = window.innerWidth,
+      h = window.innerHeight;
     canvas!.width = w;
     canvas!.height = h;
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
-  }
-
-  window.addEventListener('resize', resize);
+  });
 
   function animate() {
     requestAnimationFrame(animate);
@@ -120,17 +136,50 @@ function init() {
       robot.group.position.copy(player.position);
       robot.group.position.y = -0.8;
       robot.group.rotation.y = player.yaw;
-
-      const animMap: Record<string, string> = {
-        stand: 'idle',
-        sprint: 'run',
-        crouch: 'crouch',
-        jump: 'jump',
-      };
-      transitionAnim(robot.anim, animMap[player.state] || 'idle');
+      transitionAnim(
+        robot.anim,
+        { stand: 'idle', sprint: 'run', crouch: 'crouch', jump: 'jump' }[player.state] || 'idle'
+      );
       updateRobotAnim(robot.anim, dt);
 
-      for (const b of bots) updateRobotAnim(b.anim, dt);
+      // Fire weapon
+      if (inp.fire) {
+        const origin = new THREE.Vector3(0, player.getEyeHeight(), 0);
+        const dir = new THREE.Vector3(
+          -Math.sin(player.yaw),
+          -Math.sin(player.pitch),
+          -Math.cos(player.yaw)
+        );
+        const targets = bots
+          .filter((b) => b.hp.alive)
+          .map((b) => ({
+            id: b.hp.id,
+            position: b.hp.position,
+            capsuleHeight: 1.8,
+            capsuleRadius: 0.4,
+          }));
+        const results = fireWeapon(weapon, origin, dir, targets, performance.now());
+        for (const r of results) {
+          if (r.hit && r.entityId) {
+            const bot = bots.find((b) => b.hp.id === r.entityId);
+            if (bot) {
+              bot.hp.takeDamage(r.damage);
+              if (!bot.hp.alive) {
+                bot.group.visible = false;
+                // Respawn bot after 3s
+                setTimeout(() => {
+                  bot.hp.respawn();
+                  bot.group.visible = true;
+                  bot.group.position.copy(bot.hp.position);
+                  bot.bot.anim.actions.idle.play();
+                }, 3000);
+              }
+            }
+          }
+        }
+      }
+
+      for (const b of bots) updateRobotAnim(b.bot.anim, dt);
 
       updateCamera(
         camera,

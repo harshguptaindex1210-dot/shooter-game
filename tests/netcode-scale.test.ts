@@ -38,7 +38,10 @@ describe('netcode scaling', () => {
     const snapshot = {
       tick: 0,
       entities: Object.fromEntries(
-        engines.map(e => [e.entityId, { pos: e.localState.pos.clone(), vel: new THREE.Vector3(), health: 100 }])
+        engines.map((e) => [
+          e.entityId,
+          { pos: e.localState.pos.clone(), vel: new THREE.Vector3(), health: 100 },
+        ])
       ) as Record<string, { pos: THREE.Vector3; vel: THREE.Vector3; health: number }>,
     };
     for (const e of engines) {
@@ -57,9 +60,9 @@ describe('netcode scaling', () => {
           sprint: false,
           jump: false,
           aim: false,
+          fire: false,
           mouseX: 0,
           mouseY: 0,
-          fire: false,
         },
         1 / 20,
         0

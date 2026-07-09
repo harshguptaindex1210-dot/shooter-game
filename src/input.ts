@@ -9,6 +9,7 @@ export function createInputManager(canvas: HTMLCanvasElement): InputManager {
   const keys: Set<string> = new Set();
   let mouseX = 0;
   let mouseY = 0;
+  let firePressed = false;
 
   function onKeyDown(e: KeyboardEvent) {
     keys.add(e.code);
@@ -23,10 +24,19 @@ export function createInputManager(canvas: HTMLCanvasElement): InputManager {
     mouseY += e.movementY;
   }
 
+  function onMouseDown(e: MouseEvent) {
+    if (e.button === 0) firePressed = true;
+  }
+
+  function onMouseUp(e: MouseEvent) {
+    if (e.button === 0) firePressed = false;
+  }
+
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
-
   canvas.addEventListener('mousemove', onMouseMove);
+  canvas.addEventListener('mousedown', onMouseDown);
+  window.addEventListener('mouseup', onMouseUp);
 
   document.addEventListener('pointerlockchange', () => {
     if (!document.pointerLockElement) {
@@ -35,7 +45,7 @@ export function createInputManager(canvas: HTMLCanvasElement): InputManager {
   });
 
   canvas.addEventListener('click', () => {
-    canvas.requestPointerLock();
+    if (!document.pointerLockElement) canvas.requestPointerLock();
   });
 
   function getInput(): PlayerInput {
@@ -48,6 +58,7 @@ export function createInputManager(canvas: HTMLCanvasElement): InputManager {
       crouch: keys.has('ControlLeft') || keys.has('ControlRight'),
       jump: keys.has('Space'),
       aim: keys.has('MouseRight'),
+      fire: firePressed,
       mouseX,
       mouseY,
     };
@@ -62,6 +73,8 @@ export function createInputManager(canvas: HTMLCanvasElement): InputManager {
     window.removeEventListener('keydown', onKeyDown);
     window.removeEventListener('keyup', onKeyUp);
     canvas.removeEventListener('mousemove', onMouseMove);
+    canvas.removeEventListener('mousedown', onMouseDown);
+    window.removeEventListener('mouseup', onMouseUp);
   }
 
   return { getInput, dispose };
