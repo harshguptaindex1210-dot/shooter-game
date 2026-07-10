@@ -18,6 +18,10 @@ describe('netcode', () => {
         mouseX: 0,
         mouseY: 0,
         fire: false,
+        reload: false,
+        weapon1: false,
+        weapon2: false,
+        weapon3: false,
       },
       1 / 20,
       0
@@ -36,12 +40,15 @@ describe('netcode', () => {
       sprint: false,
       jump: false,
       aim: false,
-      fire: false,
       mouseX: 0,
       mouseY: 0,
+      fire: false,
+      reload: false,
+      weapon1: false,
+      weapon2: false,
+      weapon3: false,
     };
     e.applyInput(seq1, 1 / 20, 0);
-
     e.applySnapshot({
       tick: 1,
       entities: {
@@ -72,6 +79,10 @@ describe('netcode', () => {
         mouseX: 0,
         mouseY: 0,
         fire: false,
+        reload: false,
+        weapon1: false,
+        weapon2: false,
+        weapon3: false,
       },
       1 / 20,
       0
@@ -91,9 +102,13 @@ describe('input frame', () => {
       sprint: false,
       jump: false,
       aim: false,
-      fire: false,
       mouseX: 0,
       mouseY: 0,
+      fire: false,
+      reload: false,
+      weapon1: false,
+      weapon2: false,
+      weapon3: false,
     };
     expect(f.seq).toBe(1);
     expect(f.forward).toBe(true);

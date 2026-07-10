@@ -13,6 +13,10 @@ export interface PlayerInput {
   jump: boolean;
   aim: boolean;
   fire: boolean;
+  reload: boolean;
+  weapon1: boolean;
+  weapon2: boolean;
+  weapon3: boolean;
   mouseX: number;
   mouseY: number;
 }

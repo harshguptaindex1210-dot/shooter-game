@@ -10,38 +10,33 @@ export function createInputManager(canvas: HTMLCanvasElement): InputManager {
   let mouseX = 0;
   let mouseY = 0;
   let firePressed = false;
+  let reloadOnce = false;
+  let w1 = false,
+    w2 = false,
+    w3 = false;
 
-  function onKeyDown(e: KeyboardEvent) {
+  window.addEventListener('keydown', (e) => {
     keys.add(e.code);
-  }
+    if (e.code === 'KeyR') reloadOnce = true;
+    if (e.code === 'Digit1') w1 = true;
+    if (e.code === 'Digit2') w2 = true;
+    if (e.code === 'Digit3') w3 = true;
+  });
 
-  function onKeyUp(e: KeyboardEvent) {
-    keys.delete(e.code);
-  }
-
-  function onMouseMove(e: MouseEvent) {
+  window.addEventListener('keyup', (e) => keys.delete(e.code));
+  canvas.addEventListener('mousemove', (e) => {
     mouseX += e.movementX;
     mouseY += e.movementY;
-  }
-
-  function onMouseDown(e: MouseEvent) {
+  });
+  canvas.addEventListener('mousedown', (e) => {
     if (e.button === 0) firePressed = true;
-  }
-
-  function onMouseUp(e: MouseEvent) {
+  });
+  window.addEventListener('mouseup', (e) => {
     if (e.button === 0) firePressed = false;
-  }
-
-  window.addEventListener('keydown', onKeyDown);
-  window.addEventListener('keyup', onKeyUp);
-  canvas.addEventListener('mousemove', onMouseMove);
-  canvas.addEventListener('mousedown', onMouseDown);
-  window.addEventListener('mouseup', onMouseUp);
+  });
 
   document.addEventListener('pointerlockchange', () => {
-    if (!document.pointerLockElement) {
-      keys.clear();
-    }
+    if (!document.pointerLockElement) keys.clear();
   });
 
   canvas.addEventListener('click', () => {
@@ -59,23 +54,21 @@ export function createInputManager(canvas: HTMLCanvasElement): InputManager {
       jump: keys.has('Space'),
       aim: keys.has('MouseRight'),
       fire: firePressed,
+      reload: reloadOnce,
+      weapon1: w1,
+      weapon2: w2,
+      weapon3: w3,
       mouseX,
       mouseY,
     };
-
     mouseX = 0;
     mouseY = 0;
-
+    reloadOnce = false;
+    w1 = false;
+    w2 = false;
+    w3 = false;
     return input;
   }
 
-  function dispose() {
-    window.removeEventListener('keydown', onKeyDown);
-    window.removeEventListener('keyup', onKeyUp);
-    canvas.removeEventListener('mousemove', onMouseMove);
-    canvas.removeEventListener('mousedown', onMouseDown);
-    window.removeEventListener('mouseup', onMouseUp);
-  }
-
-  return { getInput, dispose };
+  return { getInput, dispose: () => {} };
 }

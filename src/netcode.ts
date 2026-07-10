@@ -12,6 +12,10 @@ export interface InputFrame {
   mouseX: number;
   mouseY: number;
   fire: boolean;
+  reload: boolean;
+  weapon1: boolean;
+  weapon2: boolean;
+  weapon3: boolean;
 }
 
 export interface Snapshot {
@@ -111,5 +115,9 @@ export function createBotInput(
     mouseX: 0,
     mouseY: 0,
     fire: false,
+    reload: false,
+    weapon1: false,
+    weapon2: false,
+    weapon3: false,
   };
 }
