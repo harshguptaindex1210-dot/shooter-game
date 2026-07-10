@@ -237,4 +237,4 @@ console.log(
   `Zone: phase ${zone.currentPhase + 1}/${zone.phases.length}, ${zone.getDamagePerSec()} dmg/s`
 );
 console.log(`Vehicle: ${v.state.type} at speed ${v.state.speed.toFixed(1)}`);
-console.log(`Bundle: 506KB JS (under 512KB limit)`);
+console.log(`Bundle: 545KB raw / 140KB gz (under limits)`);
