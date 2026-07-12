@@ -28,7 +28,7 @@ export function createInputManager(canvas: HTMLCanvasElement): InputManager {
     mouseX += e.movementX;
     mouseY += e.movementY;
   });
-  canvas.addEventListener('mousedown', (e) => {
+  window.addEventListener('mousedown', (e) => {
     if (e.button === 0) firePressed = true;
   });
   window.addEventListener('mouseup', (e) => {

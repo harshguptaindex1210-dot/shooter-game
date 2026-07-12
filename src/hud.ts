@@ -62,17 +62,35 @@ export function createMinimap(): { update: (data: MinimapData) => void } {
   canvas.width = 160;
   canvas.height = 160;
   canvas.style.cssText =
-    'position:fixed;top:50px;right:12px;z-index:9997;border:2px solid rgba(255,255,255,0.3);border-radius:4px;background:#1a1a2e;';
+    'position:fixed;top:50px;right:12px;z-index:9997;border:2px solid rgba(255,255,255,0.3);border-radius:4px;background:#1a1a2e;cursor:pointer;transition:all 0.2s;';
   document.body.appendChild(canvas);
   const ctx = canvas.getContext('2d')!;
 
   return {
     update(data: MinimapData) {
+      const full = data.fullscreen || false;
+      const size = full ? Math.min(window.innerWidth, window.innerHeight) * 0.5 : 160;
+      canvas.width = size;
+      canvas.height = size;
+      canvas.style.width = size + 'px';
+      canvas.style.height = size + 'px';
+      if (full) {
+        canvas.style.top = '50%';
+        canvas.style.right = '50%';
+        canvas.style.transform = 'translate(50%, -50%)';
+        canvas.style.zIndex = '9999';
+      } else {
+        canvas.style.top = '50px';
+        canvas.style.right = '12px';
+        canvas.style.transform = 'none';
+        canvas.style.zIndex = '9997';
+      }
+      const s = size / 1000;
+      const ox = size / 2 - data.px * s;
+      const oz = size / 2 - data.pz * s;
+
       ctx.fillStyle = '#1a1a2e';
-      ctx.fillRect(0, 0, 160, 160);
-      const s = 160 / 1000;
-      const ox = 80 - data.px * s;
-      const oz = 80 - data.pz * s;
+      ctx.fillRect(0, 0, size, size);
 
       ctx.strokeStyle = '#9932cc';
       ctx.lineWidth = 2;
@@ -81,9 +99,7 @@ export function createMinimap(): { update: (data: MinimapData) => void } {
       ctx.stroke();
 
       ctx.fillStyle = '#555';
-      for (const b of data.buildings) {
-        ctx.fillRect(b.x * s + ox - 2, b.z * s + oz - 2, 4, 4);
-      }
+      for (const b of data.buildings) ctx.fillRect(b.x * s + ox - 2, b.z * s + oz - 2, 4, 4);
 
       ctx.fillStyle = '#f44';
       for (const e of data.enemies) {
@@ -117,4 +133,5 @@ export interface MinimapData {
   sr: number;
   buildings: { x: number; z: number }[];
   enemies: { x: number; z: number; alive: boolean }[];
+  fullscreen?: boolean;
 }

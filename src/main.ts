@@ -13,16 +13,22 @@ const WEAPON_SLOTS: ('rifle' | 'pistol' | 'grenade')[] = ['rifle', 'pistol', 'gr
 
 function attachRifle(robotGroup: THREE.Group) {
   const m = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.5, roughness: 0.4 });
-  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.035, 0.8, 6), m);
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.8, 8), m);
   barrel.rotation.x = Math.PI / 2;
-  barrel.position.set(0.55, 0.85, -0.15);
+  barrel.position.set(0.6, 0.75, -0.2);
   robotGroup.add(barrel);
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.12, 0.3), m);
-  body.position.set(0.55, 0.85, 0.05);
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.15, 0.3), m);
+  body.position.set(0.6, 0.75, 0.05);
   robotGroup.add(body);
-  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.1, 0.06), m);
-  grip.position.set(0.55, 0.75, 0.08);
+  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.12, 0.06), m);
+  grip.position.set(0.6, 0.65, 0.1);
   robotGroup.add(grip);
+  const scope = new THREE.Mesh(
+    new THREE.BoxGeometry(0.04, 0.04, 0.08),
+    new THREE.MeshStandardMaterial({ color: 0x111111 })
+  );
+  scope.position.set(0.6, 0.85, 0.0);
+  robotGroup.add(scope);
 }
 
 function spawnBot(position: THREE.Vector3, scene: THREE.Scene) {
@@ -46,18 +52,54 @@ function spawnBot(position: THREE.Vector3, scene: THREE.Scene) {
   return { bot, hp, group: bot.group };
 }
 
+function createMuzzleFlash(scene: THREE.Scene, pos: THREE.Vector3) {
+  const flash = new THREE.PointLight(0xffff44, 3, 15);
+  flash.position.copy(pos);
+  scene.add(flash);
+  setTimeout(() => scene.remove(flash), 60);
+  const tracer = new THREE.Mesh(
+    new THREE.SphereGeometry(0.08, 4, 4),
+    new THREE.MeshBasicMaterial({ color: 0xffff00 })
+  );
+  tracer.position.copy(pos);
+  scene.add(tracer);
+  setTimeout(() => scene.remove(tracer), 80);
+}
+
+function showDeathScreen(kills: number, onRespawn: () => void, onLobby: () => void) {
+  const el = document.createElement('div');
+  el.id = 'death-screen';
+  el.style.cssText =
+    'position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;font-family:sans-serif;color:#fff;';
+  el.innerHTML = `
+    <h1 style="font-size:48px;color:#f44;margin-bottom:8px;">ELIMINATED</h1>
+    <p style="color:#aaa;font-size:16px;margin-bottom:24px;">Kills: ${kills}</p>
+    <button id="death-respawn" style="padding:12px 36px;font-size:16px;background:#4af;color:#000;border:none;border-radius:4px;cursor:pointer;margin-bottom:8px;">Respawn</button>
+    <button id="death-lobby" style="padding:8px 24px;font-size:13px;background:#444;color:#fff;border:none;border-radius:4px;cursor:pointer;">Return to Lobby</button>
+  `;
+  document.body.appendChild(el);
+  document.getElementById('death-respawn')!.onclick = () => {
+    el.remove();
+    onRespawn();
+  };
+  document.getElementById('death-lobby')!.onclick = () => {
+    el.remove();
+    onLobby();
+  };
+}
+
 function init() {
   const canvas = document.querySelector<HTMLCanvasElement>('#game');
   if (!canvas) throw new Error('Canvas #game not found');
+  const c = canvas;
 
   const quality: QualityPreset =
     (new URLSearchParams(window.location.search).get('quality') as QualityPreset) ?? 'medium';
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  canvas.style.width = window.innerWidth + 'px';
-  canvas.style.height = window.innerHeight + 'px';
+  c.width = window.innerWidth;
+  c.height = window.innerHeight;
+  c.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;display:block;';
 
-  const { scene, camera, renderer, controls } = createScene(canvas, quality);
+  const { scene, camera, renderer, controls } = createScene(c, quality);
   controls.enabled = false;
 
   const player = createPlayer(new THREE.Vector3(0, 0.9, 0));
@@ -78,6 +120,8 @@ function init() {
   let kills = 0;
   let playerHealth = 100;
   let lastHitTime = 0;
+  let dead = false;
+  let minimapFullscreen = false;
   const buildings: { mesh: THREE.Mesh; size: number }[] = [];
 
   scene.traverse((child) => {
@@ -106,12 +150,16 @@ function init() {
   let lastTime = performance.now();
   let gameStarted = false;
 
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyM') minimapFullscreen = !minimapFullscreen;
+  });
+
   showLobby(
     { level: 1, xp: 0, wins: 0, kills: 0, matches: 0 },
     {
       onStartMatch() {
         gameStarted = true;
-        canvas.requestPointerLock();
+        c.requestPointerLock();
       },
       onSettingsChange(settings) {
         const q = settings.quality as QualityPreset;
@@ -121,8 +169,8 @@ function init() {
   );
 
   window.addEventListener('resize', () => {
-    canvas!.width = window.innerWidth;
-    canvas!.height = window.innerHeight;
+    c.width = window.innerWidth;
+    c.height = window.innerHeight;
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -133,11 +181,41 @@ function init() {
   }
 
   function takeDamage(amount: number) {
+    if (dead) return;
     playerHealth = Math.max(0, playerHealth - amount);
     lastHitTime = performance.now();
     if (playerHealth <= 0) {
-      playerHealth = 100;
-      player.position.set(0, 0.9, 0);
+      dead = true;
+      document.exitPointerLock();
+      showDeathScreen(
+        kills,
+        () => {
+          dead = false;
+          playerHealth = 100;
+          player.position.set(0, 0.9, 0);
+          player.position.set(0, 0.9, 0);
+          c.requestPointerLock();
+        },
+        () => {
+          gameStarted = false;
+          dead = false;
+          playerHealth = 100;
+          player.position.set(0, 0.9, 0);
+          showLobby(
+            { level: 1, xp: 0, wins: 0, kills, matches: 1 },
+            {
+              onStartMatch() {
+                gameStarted = true;
+                c.requestPointerLock();
+              },
+              onSettingsChange(settings) {
+                const q = settings.quality as QualityPreset;
+                if (q) document.documentElement.dataset.quality = q;
+              },
+            }
+          );
+        }
+      );
     }
   }
 
@@ -147,7 +225,7 @@ function init() {
     const dt = Math.min((now - lastTime) / 1000, 0.05);
     lastTime = now;
 
-    if (gameStarted) {
+    if (gameStarted && !dead) {
       const inp = input.getInput();
       if (inp.weapon1) switchWeapon(0);
       if (inp.weapon2) switchWeapon(1);
@@ -165,7 +243,6 @@ function init() {
       );
       updateRobotAnim(robot.anim, dt);
 
-      // Fire
       if (inp.fire) {
         const origin = new THREE.Vector3(0, player.getEyeHeight(), 0);
         const dir = new THREE.Vector3(
@@ -181,6 +258,7 @@ function init() {
             capsuleHeight: 1.8,
             capsuleRadius: 0.4,
           }));
+        createMuzzleFlash(scene, origin);
         for (const r of fireWeapon(weapons[currentWeapon], origin, dir, targets, now)) {
           if (r.hit && r.entityId) {
             const bot = bots.find((b) => b.hp.id === r.entityId);
@@ -204,7 +282,6 @@ function init() {
         }
       }
 
-      // Bot AI
       for (const b of bots) {
         if (!b.hp.alive) continue;
         updateRobotAnim(b.bot.anim, dt);
@@ -223,7 +300,6 @@ function init() {
         if (dist < 50 && Math.random() < 0.02) takeDamage(5 + Math.random() * 10);
       }
 
-      // Building collision
       for (const b of buildings) {
         const bp = new THREE.Vector3();
         b.mesh.getWorldPosition(bp);
@@ -271,6 +347,7 @@ function init() {
           { x: 0, z: -300 },
         ],
         enemies: bots.map((b) => ({ x: b.hp.position.x, z: b.hp.position.z, alive: b.hp.alive })),
+        fullscreen: minimapFullscreen,
       });
     }
 
