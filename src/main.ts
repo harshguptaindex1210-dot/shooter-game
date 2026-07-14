@@ -135,11 +135,11 @@ function init() {
   });
 
   const bots = [
-    spawnBot(new THREE.Vector3(5, 0, -5), scene),
-    spawnBot(new THREE.Vector3(-5, 0, -8), scene),
-    spawnBot(new THREE.Vector3(8, 0, 3), scene),
-    spawnBot(new THREE.Vector3(-10, 0, 10), scene),
-    spawnBot(new THREE.Vector3(15, 0, -3), scene),
+    { ...spawnBot(new THREE.Vector3(5, 0, -5), scene), lastShot: 0 },
+    { ...spawnBot(new THREE.Vector3(-5, 0, -8), scene), lastShot: 0 },
+    { ...spawnBot(new THREE.Vector3(8, 0, 3), scene), lastShot: 0 },
+    { ...spawnBot(new THREE.Vector3(-10, 0, 10), scene), lastShot: 0 },
+    { ...spawnBot(new THREE.Vector3(15, 0, -3), scene), lastShot: 0 },
   ];
   for (const b of bots) b.bot.anim.actions.idle.play();
 
@@ -297,7 +297,24 @@ function init() {
           b.group.rotation.y = Math.atan2(dx, dz);
           transitionAnim(b.bot.anim, dist < 15 ? 'run' : 'walk');
         }
-        if (dist < 50 && Math.random() < 0.02) takeDamage(5 + Math.random() * 10);
+        const fireRate = 1500;
+        if (dist < 30 && now - b.lastShot > fireRate && Math.random() < 0.3) {
+          b.lastShot = now;
+          const dmg = 3 + Math.random() * 5;
+          takeDamage(dmg);
+          const flash = new THREE.PointLight(0xff4444, 2, 10);
+          flash.position.copy(b.hp.position);
+          flash.position.y += 1.5;
+          scene.add(flash);
+          setTimeout(() => scene.remove(flash), 60);
+          const tracer = new THREE.Mesh(
+            new THREE.SphereGeometry(0.06, 4, 4),
+            new THREE.MeshBasicMaterial({ color: 0xff4444 })
+          );
+          tracer.position.copy(flash.position);
+          scene.add(tracer);
+          setTimeout(() => scene.remove(tracer), 80);
+        }
       }
 
       for (const b of buildings) {
