@@ -29,14 +29,17 @@ export function createInputManager(canvas: HTMLCanvasElement): InputManager {
     mouseY += e.movementY;
   });
   window.addEventListener('mousedown', (e) => {
-    if (e.button === 0) firePressed = true;
+    if (e.button === 0 && document.pointerLockElement) firePressed = true;
   });
   window.addEventListener('mouseup', (e) => {
     if (e.button === 0) firePressed = false;
   });
 
   document.addEventListener('pointerlockchange', () => {
-    if (!document.pointerLockElement) keys.clear();
+    if (!document.pointerLockElement) {
+      keys.clear();
+      firePressed = false;
+    }
   });
 
   canvas.addEventListener('click', () => {

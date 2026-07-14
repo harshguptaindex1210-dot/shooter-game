@@ -193,7 +193,6 @@ function init() {
           dead = false;
           playerHealth = 100;
           player.position.set(0, 0.9, 0);
-          player.position.set(0, 0.9, 0);
           c.requestPointerLock();
         },
         () => {
@@ -268,6 +267,7 @@ function init() {
                 kills++;
                 bot.group.visible = false;
                 setTimeout(() => {
+                  bot.lastShot = performance.now();
                   bot.hp.respawn(
                     new THREE.Vector3((Math.random() - 0.5) * 40, 0.9, (Math.random() - 0.5) * 40)
                   );
@@ -282,6 +282,7 @@ function init() {
         }
       }
 
+      const BOT_FIRE_RATE = 1500;
       for (const b of bots) {
         if (!b.hp.alive) continue;
         updateRobotAnim(b.bot.anim, dt);
@@ -297,8 +298,7 @@ function init() {
           b.group.rotation.y = Math.atan2(dx, dz);
           transitionAnim(b.bot.anim, dist < 15 ? 'run' : 'walk');
         }
-        const fireRate = 1500;
-        if (dist < 30 && now - b.lastShot > fireRate && Math.random() < 0.3) {
+        if (dist < 30 && now - b.lastShot > BOT_FIRE_RATE && Math.random() < 0.3) {
           b.lastShot = now;
           const dmg = 3 + Math.random() * 5;
           takeDamage(dmg);
